@@ -1,0 +1,36 @@
+* {
+  border: 1px solid black;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+button {
+  height: 30px;
+}
+
+.gameboard {
+  display: grid;
+  grid-template-columns: repeat(3, 200px);
+  grid-template-rows: repeat(3, 200px);
+  width: 600px;
+  height: 600px;
+}
+
+.gamecell {
+  background-size: cover;
+}
