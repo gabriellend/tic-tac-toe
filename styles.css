@@ -19,7 +19,7 @@ main {
   text-align: center;
 }
 
-button {
+button.start {
   height: 30px;
 }
 
@@ -31,6 +31,6 @@ button {
   height: 600px;
 }
 
-.gamecell {
+button.gamecell {
   background-size: cover;
 }
