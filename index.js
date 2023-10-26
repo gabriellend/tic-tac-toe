@@ -107,9 +107,14 @@ const ScreenController = () => {
   const startButton = document.querySelector(".start");
   const cells = document.querySelectorAll(".cell");
 
-  const updateScreen = (clickedCell) => {
+  const reportPlayerTurn = () => {
     const activePlayer = game.getActivePlayer();
     turnDiv.textContent = `${activePlayer.name}'s turn...`;
+    return activePlayer;
+  };
+
+  const updateScreen = (clickedCell) => {
+    const activePlayer = game.getActivePlayer();
 
     if (activePlayer.token === "x") {
       clickedCell.classList.add("x");
@@ -130,8 +135,9 @@ const ScreenController = () => {
     const col = clickedCell.dataset.col;
     const modelCell = game.getBoard()[row][col];
 
-    game.playTurn(modelCell);
     updateScreen(clickedCell);
+    game.playTurn(modelCell);
+    reportPlayerTurn();
   };
 
   const addEventListeners = () => {
@@ -146,10 +152,9 @@ const ScreenController = () => {
     });
 
     startButton.addEventListener("click", () => {
-      const activePlayer = game.getActivePlayer();
-      turnDiv.style.visibility = "visible";
-      turnDiv.textContent = `${activePlayer.name}'s turn...`;
       game.unlock();
+      turnDiv.style.visibility = "visible";
+      reportPlayerTurn();
     });
   };
 
