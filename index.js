@@ -32,7 +32,6 @@ const Gameboard = () => {
   };
 
   const unlock = () => {
-    console.log("here");
     unlocked = true;
   };
 
@@ -105,16 +104,11 @@ const GameController = (
 const ScreenController = () => {
   const game = GameController();
   const turnDiv = document.querySelector(".turn");
-  const activePlayer = game.getActivePlayer();
   const startButton = document.querySelector(".start");
   const cells = document.querySelectorAll(".cell");
 
-  const updateScreen = (e) => {
-    if (!game.isUnlocked()) {
-      return;
-    }
-
-    const clickedCell = e.target;
+  const updateScreen = (clickedCell) => {
+    const activePlayer = game.getActivePlayer();
     turnDiv.textContent = `${activePlayer.name}'s turn...`;
 
     if (activePlayer.token === "x") {
@@ -124,12 +118,35 @@ const ScreenController = () => {
     }
   };
 
+  const clickHandlerCell = (e) => {
+    if (!game.isUnlocked()) {
+      return;
+    }
+
+    const clickedCell = e.target;
+    if (!clickedCell) return;
+
+    const row = clickedCell.dataset.row;
+    const col = clickedCell.dataset.col;
+    const modelCell = game.getBoard()[row][col];
+
+    game.playTurn(modelCell);
+    updateScreen(clickedCell);
+  };
+
   const addEventListeners = () => {
     cells.forEach((cell, i) => {
-      cell.addEventListener("click", updateScreen);
+      let row = Math.floor(i / 3);
+      let col = i % 3;
+
+      cell.dataset.row = row;
+      cell.dataset.col = col;
+
+      cell.addEventListener("click", clickHandlerCell);
     });
 
     startButton.addEventListener("click", () => {
+      const activePlayer = game.getActivePlayer();
       turnDiv.style.visibility = "visible";
       turnDiv.textContent = `${activePlayer.name}'s turn...`;
       game.unlock();
