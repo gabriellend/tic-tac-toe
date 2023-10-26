@@ -2,7 +2,8 @@
   border: 1px solid black;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
 }
@@ -23,7 +24,7 @@ button.start {
   height: 30px;
 }
 
-.gameboard {
+.board {
   display: grid;
   grid-template-columns: repeat(3, 200px);
   grid-template-rows: repeat(3, 200px);
@@ -31,6 +32,14 @@ button.start {
   height: 600px;
 }
 
-button.gamecell {
+.cell {
   background-size: cover;
+}
+
+.cell.x {
+  background-image: url("assets/x.png");
+}
+
+.cell.o {
+  background-image: url("assets/o.png");
 }

@@ -14,6 +14,7 @@ const Gameboard = () => {
   const rows = 3;
   const columns = 3;
   const board = [];
+  let unlocked = false;
 
   for (let i = 0; i < rows; i++) {
     board[i] = [];
@@ -30,9 +31,18 @@ const Gameboard = () => {
     }
   };
 
+  const unlock = () => {
+    console.log("here");
+    unlocked = true;
+  };
+
+  const isUnlocked = () => unlocked;
+
   return {
     getBoard,
     markBoard,
+    unlock,
+    isUnlocked,
   };
 };
 
@@ -87,22 +97,46 @@ const GameController = (
     playTurn,
     getActivePlayer,
     getBoard: board.getBoard,
+    unlock: board.unlock,
+    isUnlocked: board.isUnlocked,
   };
 };
 
 const ScreenController = () => {
   const game = GameController();
+  const turnDiv = document.querySelector(".turn");
+  const activePlayer = game.getActivePlayer();
+  const startButton = document.querySelector(".start");
+  const cells = document.querySelectorAll(".cell");
+
+  const updateScreen = (e) => {
+    if (!game.isUnlocked()) {
+      return;
+    }
+
+    const clickedCell = e.target;
+    turnDiv.textContent = `${activePlayer.name}'s turn...`;
+
+    if (activePlayer.token === "x") {
+      clickedCell.classList.add("x");
+    } else {
+      clickedCell.classList.add("o");
+    }
+  };
+
+  const addEventListeners = () => {
+    cells.forEach((cell, i) => {
+      cell.addEventListener("click", updateScreen);
+    });
+
+    startButton.addEventListener("click", () => {
+      turnDiv.style.visibility = "visible";
+      turnDiv.textContent = `${activePlayer.name}'s turn...`;
+      game.unlock();
+    });
+  };
+
+  addEventListeners();
 };
-// const renderGameboard = () => {
-//   const gamecells = document.querySelectorAll(".gamecell");
 
-//   gamecells.forEach((cell, i) => {
-//     if (i % 2 === 0) {
-//       cell.style.backgroundImage = "url(assets/x.png)"
-//     } else {
-//       cell.style.backgroundImage = "url(assets/o.png)"
-//     }
-//   });
-// }
-
-// renderGameboard();
+ScreenController();
