@@ -13,15 +13,21 @@
 const Gameboard = () => {
   const rows = 3;
   const columns = 3;
-  const board = [];
+  let board = [];
   let unlocked = false;
 
-  for (let i = 0; i < rows; i++) {
-    board[i] = [];
-    for (let j = 0; j < columns; j++) {
-      board[i].push(Cell());
+  const setUpBoard = () => {
+    for (let i = 0; i < rows; i++) {
+      board[i] = [];
+      for (let j = 0; j < columns; j++) {
+        board[i].push(Cell());
+      }
     }
-  }
+  };
+
+  const clearBoard = () => {
+    setUpBoard();
+  };
 
   const getBoard = () => board;
 
@@ -31,17 +37,20 @@ const Gameboard = () => {
     }
   };
 
-  const unlock = () => {
-    unlocked = true;
+  const toggleLock = () => {
+    unlocked = !unlocked;
   };
 
-  const isUnlocked = () => unlocked;
+  const isUnlocked = () => unlocked === true;
+
+  setUpBoard();
 
   return {
     getBoard,
     markBoard,
-    unlock,
+    toggleLock,
     isUnlocked,
+    clearBoard,
   };
 };
 
@@ -79,16 +88,14 @@ const GameController = (
 
   const getActivePlayer = () => activePlayer;
 
+  const resetActivePlayer = () => (activePlayer = players[0]);
+
   const switchPlayer = () => {
     activePlayer = activePlayer === players[0] ? players[1] : players[0];
   };
 
   const playTurn = (cell) => {
     board.markBoard(cell, getActivePlayer().token);
-
-    /*  This is where we would check for a winner and handle that logic,
-        such as a win message. */
-
     switchPlayer();
   };
 
@@ -96,8 +103,10 @@ const GameController = (
     playTurn,
     getActivePlayer,
     getBoard: board.getBoard,
-    unlock: board.unlock,
+    toggleLock: board.toggleLock,
     isUnlocked: board.isUnlocked,
+    clearBoard: board.clearBoard,
+    resetActivePlayer,
   };
 };
 
@@ -114,6 +123,12 @@ const ScreenController = () => {
   };
 
   const updateScreen = (clickedCell) => {
+    // If a cell was not clicked, we are resetting the board.
+    if (!clickedCell) {
+      cells.forEach((cell) => (cell.className = "cell"));
+      return;
+    }
+
     const activePlayer = game.getActivePlayer();
 
     if (activePlayer.token === "x") {
@@ -129,7 +144,13 @@ const ScreenController = () => {
     }
 
     const clickedCell = e.target;
-    if (!clickedCell) return;
+    // if (!clickedCell) return;
+
+    // If the cell already has an "x" or an "o", don't
+    // play a turn
+    if (clickedCell.classList.length > 1) {
+      return;
+    }
 
     const row = clickedCell.dataset.row;
     const col = clickedCell.dataset.col;
@@ -152,9 +173,19 @@ const ScreenController = () => {
     });
 
     startButton.addEventListener("click", () => {
-      game.unlock();
-      turnDiv.style.visibility = "visible";
-      reportPlayerTurn();
+      if (startButton.textContent === "Start Game") {
+        game.toggleLock();
+        turnDiv.style.visibility = "visible";
+        startButton.textContent = "Reset Game";
+        reportPlayerTurn();
+      } else if (startButton.textContent === "Reset Game") {
+        game.clearBoard();
+        turnDiv.style.visibility = "hidden";
+        startButton.textContent = "Start Game";
+        updateScreen();
+        game.toggleLock();
+        game.resetActivePlayer();
+      }
     });
   };
 
