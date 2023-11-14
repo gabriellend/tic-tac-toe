@@ -57,8 +57,8 @@ const Gameboard = () => {
 function Cell() {
   let value = null;
 
-  const setValue = (player) => {
-    value = player;
+  const setValue = (playerToken) => {
+    value = playerToken;
   };
 
   const getValue = () => value;
@@ -74,6 +74,8 @@ const GameController = (
   playerTwoName = "Computer"
 ) => {
   const board = Gameboard();
+  let isWon = false;
+
   const players = [
     {
       name: playerOneName,
@@ -86,16 +88,66 @@ const GameController = (
   ];
   let activePlayer = players[0];
 
+  const getWinStatus = () => isWon;
   const getActivePlayer = () => activePlayer;
 
   const resetActivePlayer = () => (activePlayer = players[0]);
+
+  const resetWinStatus = () => isWon === false;
 
   const switchPlayer = () => {
     activePlayer = activePlayer === players[0] ? players[1] : players[0];
   };
 
+  const checkForWin = () => {
+    let columnOne = [];
+    let columnTwo = [];
+    let columnThree = [];
+    let columns = [columnOne, columnTwo, columnThree];
+
+    return board.getBoard().some((row) => {
+      let activePlayerWins;
+      // Build columns
+      row.forEach((cell, j) => {
+        switch (j) {
+          case 0:
+            cell.getValue() ? columnOne.push(cell) : null;
+            break;
+          case 1:
+            cell.getValue() ? columnTwo.push(cell) : null;
+            break;
+          case 2:
+            cell.getValue() ? columnThree.push(cell) : null;
+            break;
+        }
+      });
+
+      return checkRowForWin(row) || checkColumnsForWin(columns);
+    });
+  };
+
+  const checkRowForWin = (row) =>
+    row.every((cell) => cell.getValue() === activePlayer.token);
+
+  const checkColumnsForWin = (columns) => {
+    const atLeastOneColumnFilled = columns.some(
+      (column) => column.length === 3
+    );
+
+    return atLeastOneColumnFilled
+      ? columns.some((column) => column.every((cell) => cell.getValue()))
+      : false;
+  };
+
   const playTurn = (cell) => {
     board.markBoard(cell, getActivePlayer().token);
+
+    const activePlayerWins = checkForWin();
+    if (activePlayerWins) {
+      isWon = true;
+      return;
+    }
+
     switchPlayer();
   };
 
@@ -107,6 +159,8 @@ const GameController = (
     isUnlocked: board.isUnlocked,
     clearBoard: board.clearBoard,
     resetActivePlayer,
+    getWinStatus,
+    resetWinStatus,
   };
 };
 
@@ -119,15 +173,21 @@ const ScreenController = () => {
   const reportPlayerTurn = () => {
     const activePlayer = game.getActivePlayer();
     turnDiv.textContent = `${activePlayer.name}'s turn...`;
-    return activePlayer;
+  };
+
+  const reportWin = () => {
+    const activePlayer = game.getActivePlayer();
+    turnDiv.textContent = `${activePlayer.name} wins!`;
   };
 
   const updateScreen = (clickedCell) => {
-    // If a cell was not clicked, we are resetting the board.
+    // If clickedCell is undefined, we are resetting the board.
     if (!clickedCell) {
       cells.forEach((cell) => (cell.className = "cell"));
       return;
     }
+
+    // Logic for drawing a line through the win here
 
     const activePlayer = game.getActivePlayer();
 
@@ -144,7 +204,6 @@ const ScreenController = () => {
     }
 
     const clickedCell = e.target;
-    // if (!clickedCell) return;
 
     // If the cell already has an "x" or an "o", don't
     // play a turn
@@ -158,7 +217,14 @@ const ScreenController = () => {
 
     updateScreen(clickedCell);
     game.playTurn(modelCell);
-    reportPlayerTurn();
+
+    // Should this go in updateScreen?
+    if (game.getWinStatus()) {
+      reportWin();
+      game.toggleLock();
+    } else {
+      reportPlayerTurn();
+    }
   };
 
   const addEventListeners = () => {
@@ -183,13 +249,17 @@ const ScreenController = () => {
         turnDiv.style.visibility = "hidden";
         startButton.textContent = "Start Game";
         updateScreen();
-        game.toggleLock();
         game.resetActivePlayer();
+        game.resetWinStatus();
       }
     });
   };
 
   addEventListeners();
+
+  return {
+    updateScreen,
+  };
 };
 
 ScreenController();
