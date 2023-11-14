@@ -93,7 +93,7 @@ const GameController = (
 
   const resetActivePlayer = () => (activePlayer = players[0]);
 
-  const resetWinStatus = () => isWon === false;
+  const resetWinStatus = () => (isWon = false);
 
   const switchPlayer = () => {
     activePlayer = activePlayer === players[0] ? players[1] : players[0];
@@ -105,10 +105,13 @@ const GameController = (
     let columnThree = [];
     let columns = [columnOne, columnTwo, columnThree];
 
-    return board.getBoard().some((row) => {
-      let activePlayerWins;
-      // Build columns
+    let upperLeftDownDiagonal = [];
+    let upperRightDownDiagonal = [];
+    let diagonals = [upperLeftDownDiagonal, upperRightDownDiagonal];
+
+    return board.getBoard().some((row, i) => {
       row.forEach((cell, j) => {
+        // Build columns
         switch (j) {
           case 0:
             cell.getValue() ? columnOne.push(cell) : null;
@@ -120,9 +123,43 @@ const GameController = (
             cell.getValue() ? columnThree.push(cell) : null;
             break;
         }
+
+        // Build diagonals
+        switch (i) {
+          case 0:
+            cell.getValue()
+              ? j === 0
+                ? upperLeftDownDiagonal.push(cell)
+                : j === 2
+                ? upperRightDownDiagonal.push(cell)
+                : null
+              : null;
+            break;
+          case 1:
+            cell.getValue()
+              ? j === 1
+                ? upperLeftDownDiagonal.push(cell) &&
+                  upperRightDownDiagonal.push(cell)
+                : null
+              : null;
+            break;
+          case 2:
+            cell.getValue()
+              ? j === 0
+                ? upperRightDownDiagonal.push(cell)
+                : j === 2
+                ? upperLeftDownDiagonal.push(cell)
+                : null
+              : null;
+            break;
+        }
       });
 
-      return checkRowForWin(row) || checkColumnsForWin(columns);
+      return (
+        checkRowForWin(row) ||
+        checkColumnsForWin(columns) ||
+        checkDiagonalsForWin(diagonals)
+      );
     });
   };
 
@@ -135,7 +172,32 @@ const GameController = (
     );
 
     return atLeastOneColumnFilled
-      ? columns.some((column) => column.every((cell) => cell.getValue()))
+      ? columns.some((column) =>
+          column.length === 3
+            ? column.every((cell) => cell.getValue() === activePlayer.token)
+            : false
+        )
+      : false;
+  };
+
+  const checkDiagonalsForWin = (diagonals) => {
+    diagonals.forEach((diagonal, index) => {
+      console.log(
+        `Diagonal ${index}:`,
+        diagonal.map((cell) => cell.getValue())
+      );
+    });
+
+    const atLeastOneDiagonalFilled = diagonals.some(
+      (diagonal) => diagonal.length === 3
+    );
+
+    return atLeastOneDiagonalFilled
+      ? diagonals.some((diagonal) =>
+          diagonal.length === 3
+            ? diagonal.every((cell) => cell.getValue() === activePlayer.token)
+            : false
+        )
       : false;
   };
 
