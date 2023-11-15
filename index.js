@@ -1,15 +1,3 @@
-// pressing start initiates the game
-// event handler -> GameController.start
-// GameController.start
-// unlock the board
-// player x goes first
-// grab all squares (ScreenController?)
-// click is registered on a square
-// if the square is not already occupied
-// place an x there
-// computer is player o and goes second
-// after one player has made three moves
-// we start checking for wins and ties
 const Gameboard = () => {
   const rows = 3;
   const columns = 3;
@@ -75,6 +63,7 @@ const GameController = (
 ) => {
   const board = Gameboard();
   let isWon = false;
+  let isTied = false;
 
   const players = [
     {
@@ -89,11 +78,13 @@ const GameController = (
   let activePlayer = players[0];
 
   const getWinStatus = () => isWon;
-  const getActivePlayer = () => activePlayer;
-
-  const resetActivePlayer = () => (activePlayer = players[0]);
-
   const resetWinStatus = () => (isWon = false);
+
+  const getTieStatus = () => isTied;
+  const resetTieStatus = () => (isTied = false);
+
+  const getActivePlayer = () => activePlayer;
+  const resetActivePlayer = () => (activePlayer = players[0]);
 
   const switchPlayer = () => {
     activePlayer = activePlayer === players[0] ? players[1] : players[0];
@@ -181,13 +172,6 @@ const GameController = (
   };
 
   const checkDiagonalsForWin = (diagonals) => {
-    diagonals.forEach((diagonal, index) => {
-      console.log(
-        `Diagonal ${index}:`,
-        diagonal.map((cell) => cell.getValue())
-      );
-    });
-
     const atLeastOneDiagonalFilled = diagonals.some(
       (diagonal) => diagonal.length === 3
     );
@@ -201,12 +185,24 @@ const GameController = (
       : false;
   };
 
+  const checkForTie = () => {
+    return board
+      .getBoard()
+      .every((row) => row.every((cell) => cell.getValue()));
+  };
+
   const playTurn = (cell) => {
     board.markBoard(cell, getActivePlayer().token);
 
     const activePlayerWins = checkForWin();
     if (activePlayerWins) {
       isWon = true;
+      return;
+    }
+
+    const tie = checkForTie();
+    if (tie) {
+      isTied = true;
       return;
     }
 
@@ -223,6 +219,8 @@ const GameController = (
     resetActivePlayer,
     getWinStatus,
     resetWinStatus,
+    getTieStatus,
+    resetTieStatus,
   };
 };
 
@@ -240,6 +238,10 @@ const ScreenController = () => {
   const reportWin = () => {
     const activePlayer = game.getActivePlayer();
     turnDiv.textContent = `${activePlayer.name} wins!`;
+  };
+
+  const reportTie = () => {
+    turnDiv.textContent = `It's a tie!`;
   };
 
   const updateScreen = (clickedCell) => {
@@ -284,6 +286,9 @@ const ScreenController = () => {
     if (game.getWinStatus()) {
       reportWin();
       game.toggleLock();
+    } else if (game.getTieStatus()) {
+      reportTie();
+      game.toggleLock();
     } else {
       reportPlayerTurn();
     }
@@ -313,6 +318,7 @@ const ScreenController = () => {
         updateScreen();
         game.resetActivePlayer();
         game.resetWinStatus();
+        game.resetTieStatus();
       }
     });
   };
